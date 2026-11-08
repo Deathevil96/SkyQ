@@ -32,6 +32,7 @@ namespace SkyQueue
         Transform environment;
         EnvironmentTheme activeTheme;   // world currently built (worlds rotate by level)
         ExhaustPuffs exhaust;
+        VfxPlayer vfx;
 
         // per-level state
         GameModel model;
@@ -63,6 +64,7 @@ namespace SkyQueue
             helicopter = HelicopterView.Create(cfg.helicopter, map);   // built once, reused for every VIP airlift
             emojis = EmojiReactions.Create(cfg.emoji, map.Cam);         // pooled reaction bubbles, reused every level
             exhaust = ExhaustPuffs.Create(cfg.exhaust, map.Cam);        // pooled exhaust puffs behind taxiing planes
+            vfx = VfxPlayer.Create(cfg.vfx, map.Cam);                    // pooled bursts: park dust, full sparkle, departure poof
             DevLog.Took("boot", "helicopter build", t); t = DevLog.Stamp();
 
             taps = new TapInput();
@@ -221,6 +223,7 @@ namespace SkyQueue
             Time.timeScale = 1f;
             if (helicopter != null) helicopter.Abort();
             if (exhaust != null) exhaust.Clear();
+            if (vfx != null) vfx.Clear();
             foreach (var v in views.Values) if (v != null) Destroy(v.gameObject);
             views.Clear();
             awaitingDeparture.Clear();
@@ -286,8 +289,8 @@ namespace SkyQueue
             levelStartTime = Time.time;
             GameEvents.Track("level_start", "level", id, "difficulty", data.Difficulty, "planes", data.Planes.Count, "colors", data.ColorCount);
             QueueBoosterIntros(id);
-            if (data.Difficulty == Difficulty.SuperHard) hud.Banner("SUPER HARD");
-            else if (data.Difficulty == Difficulty.Hard) hud.Banner("HARD");
+            if (data.Difficulty == Difficulty.SuperHard) hud.Banner("SUPER HARD", true);
+            else if (data.Difficulty == Difficulty.Hard) hud.Banner("HARD", false);
         }
 
         System.Collections.IEnumerator ShowResult(bool won, Difficulty difficulty)
@@ -323,6 +326,7 @@ namespace SkyQueue
                 // VIP: a helicopter airlifts the plane to the VIP stand (planes do not fly over the board)
                 helicopter.Carry(view.transform, stand, slotPlaneScale, slots.Rotations[slot], () =>
                 {
+                    vfx.Play(cfg.vfx.park, stand);
                     model.NotifyArrived(p);
                     view.ShowLabel(SeatLabelPos(slot));
                     view.SetRemaining(p.Remaining);
@@ -333,6 +337,7 @@ namespace SkyQueue
             if (cfg.logRouteChecks && Debug.isDebugBuild) LogRouteCheck(p, route);
             view.Follow(route, cfg.planeSpeed, slotPlaneScale, cfg.planeTurnDegPerSec, () =>
             {
+                vfx.Play(cfg.vfx.park, stand);
                 model.NotifyArrived(p);
                 view.ShowLabel(SeatLabelPos(slot));
                 view.SetRemaining(p.Remaining);
@@ -411,6 +416,7 @@ namespace SkyQueue
             audioService.Play(Cue.PlaneFull);
             DevLog.Info("plane", "full " + p.Id + " at stand " + p.Slot + "; ring rows " + model.Ring.RingRows + ", passengers left " + model.Ring.Remaining);
             awaitingDeparture.Add(views[p.Id]);
+            vfx.Play(cfg.vfx.full, slots.Positions[p.Slot]);
         }
 
         void BeginDeparture(PlaneView view)
@@ -419,6 +425,7 @@ namespace SkyQueue
             Vector3 stand = slots.Positions[p.Slot];
             model.BeginDeparture(p);
             audioService.Play(Cue.Depart);
+            vfx.Play(cfg.vfx.depart, stand);
             view.HideLabel();
             view.Follow(PlaneRoutes.Depart(stand, map, slots, cfg.feel), cfg.planeSpeed * cfg.departSpeedFactor, cfg.departScale, cfg.departTurnDegPerSec, () =>
             {

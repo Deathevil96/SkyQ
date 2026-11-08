@@ -620,8 +620,43 @@ MonoBehaviour:
     endSize: 0.9
     height: 0.25
     drift: 0.4
+    startAlpha: 0.85
+    fadeStart: 0.35
     onDeparture: 0
     poolSize: 48
+  vfx:
+    enabled: 1
+    park:
+      frames:
+      - {fileID: 21300000, guid: cb8eb2a12d7d75a4ca334273d7fbc115, type: 3}
+      - {fileID: 21300000, guid: 7269dd39dc9356b42a9d209fbb7c1cfe, type: 3}
+      - {fileID: 21300000, guid: 8d6049cebdd02204ebd002227c4a3a6a, type: 3}
+      - {fileID: 21300000, guid: c90da39cf147f4b40bd3672a8a33d2e7, type: 3}
+      seconds: 0.5
+      size: 1.8
+      height: 0.15
+      fadeStart: 0.6
+    full:
+      frames:
+      - {fileID: 21300000, guid: 834335db24532ba46b57d90240e9cdd7, type: 3}
+      - {fileID: 21300000, guid: 5cbfa7d77e46fa244a503fbe10be96a7, type: 3}
+      - {fileID: 21300000, guid: 3986aac072f2c984e84dc696ab295a2f, type: 3}
+      - {fileID: 21300000, guid: b11d193c27d4bce4199e27e45544c382, type: 3}
+      seconds: 0.55
+      size: 1.4
+      height: 0.9
+      fadeStart: 0.6
+    depart:
+      frames:
+      - {fileID: 21300000, guid: 060ad03c88a80394e987015b95c78055, type: 3}
+      - {fileID: 21300000, guid: ea143eb4712894d45816554ea06e3cd4, type: 3}
+      - {fileID: 21300000, guid: 151e971a8af4ac1408f061a5edb78568, type: 3}
+      - {fileID: 21300000, guid: 9289e12358d7e114e87a89c6e851737e, type: 3}
+      seconds: 0.5
+      size: 1.7
+      height: 0.3
+      fadeStart: 0.6
+    poolSize: 12
   sound:
     masterVolume: 0.6
     clips:
@@ -975,6 +1010,55 @@ MonoBehaviour:
     secondaryButton: {x: 460, y: 1170}
     panelButtonSize: {x: 380, y: 130}
     panelFontSize: 58
+    skin:
+      buttonBlue: {fileID: 21300000, guid: f693261e835430e409b5a2d043eb217a, type: 3}
+      buttonGreen: {fileID: 21300000, guid: 9a323f2b6ed654544b5fa018c9ed71d7, type: 3}
+      buttonGrey: {fileID: 21300000, guid: ce4989a36770a5740832ac354da5c363, type: 3}
+      roundRestart: {fileID: 21300000, guid: 3fce1d14c179f8447ae75eb5c56d4231, type: 3}
+      roundPause: {fileID: 21300000, guid: bb440eab84603f442b6215e475e9b6a8, type: 3}
+      coinBar: {fileID: 21300000, guid: 3c0697f2433958f408e6caaed6187067, type: 3}
+      coinBarSize: {x: 250, y: 84}
+      coinTextOffsetX: 28
+      coinBarFormat: '{0}'
+      coinBarTextColor: {r: 0.45, g: 0.25, b: 0.08, a: 1}
+      panel: {fileID: 21300000, guid: d3d9698d9a6ac9140b3912e3fe9ef14f, type: 3}
+      ribbonWin: {fileID: 21300000, guid: 8562d47092e661948877119c1f839aef, type: 3}
+      ribbonLose: {fileID: 21300000, guid: 0d7e318434b2c9f4d815d71d1ebb8431, type: 3}
+      ribbonPause: {fileID: 21300000, guid: b599ce9eee569a349ae39730654f6b62, type: 3}
+      ribbonInfo: {fileID: 21300000, guid: d19f79d2083feac4d95e8149123f5657, type: 3}
+      ribbonSize: {x: 700, y: 240}
+      ribbonOffsetY: 10
+      starsWin: {fileID: 21300000, guid: 862cc62a4c71a864a894f843ddeb7477, type: 3}
+      starsLose: {fileID: 21300000, guid: 229c1557cb37e2940bb82d060b04a0c1, type: 3}
+      starsSize: {x: 420, y: 176}
+      starsOffsetY: -175
+      ribbonFontSize: 64
+      panelTextColor: {r: 0.42, g: 0.24, b: 0.1, a: 1}
+      panelAccentColor: {r: 0.85, g: 0.45, b: 0.05, a: 1}
+      resultPanel:
+        center: {x: 460, y: 975}
+        size: {x: 780, y: 390}
+      pausePanel:
+        center: {x: 460, y: 1235}
+        size: {x: 780, y: 930}
+      buyPanel:
+        center: {x: 460, y: 1040}
+        size: {x: 880, y: 680}
+      introPanel:
+        center: {x: 460, y: 950}
+        size: {x: 880, y: 500}
+      bannerHard: {fileID: 21300000, guid: dce23fc5f813f7d44825aa502114c209, type: 3}
+      bannerSuperHard: {fileID: 21300000, guid: 944414cb43003cb4eb61b83ca83300f2, type: 3}
+      bannerArtSize: {x: 820, y: 190}
+      confetti:
+      - {fileID: 21300000, guid: d2bf066c034ad3b4a9e8ee42fb65e0be, type: 3}
+      - {fileID: 21300000, guid: 5f67169ca42b25b4e8449d49cd5e959a, type: 3}
+      - {fileID: 21300000, guid: fec27735af60efc4a8a74618a71560c3, type: 3}
+      - {fileID: 21300000, guid: 7685191e4ed6ed84396f9bc1ca2972fc, type: 3}
+      confettiSize: {x: 600, y: 600}
+      confettiOffsetY: -170
+      confettiSeconds: 0.9
+    ribbonTextOffsetY: -16
     accent: {r: 0.25, g: 0.55, b: 0.95, a: 1}
     positive: {r: 0.25, g: 0.75, b: 0.3, a: 1}
     inactive: {r: 0.25, g: 0.55, b: 0.95, a: 0.45}

@@ -84,6 +84,7 @@ namespace SkyQueue
         public FeelConfig feel = new FeelConfig();
         public HelicopterSettings helicopter = new HelicopterSettings();
         public ExhaustSettings exhaust = new ExhaustSettings();
+        public VfxSettings vfx = new VfxSettings();
         public SoundSettings sound = new SoundSettings();
         public EmojiSettings emoji = new EmojiSettings();
 

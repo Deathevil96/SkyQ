@@ -22,8 +22,8 @@ Done 2026-11-08 (owner's art in `Assets/SkyQueue/Art`):
 - Source sheets are processed by `Tools/art/*.py` (flood-fill background removal, seamless tiling, paint/outfit recolour); re-run if the owner replaces a sheet.
 
 Still to do:
-- UI kit sheet (`Art/2D/Glossy Casual Game UI Kit.png`): buttons, panels, coin, toggles, banners need slicing into 9-sliced sprites.
-- VFX sheet: background haze must be cleaned before use (smoke, confetti, sparkle, dust).
+- UI kit: DONE (2026-11-09). `Tools/art/cut_ui_kit.py` → `Art/Sprites/UI` (9-slice borders from `slices.json`). Wired via `GameConfig > hud > skin` (`UiSkin`): pill buttons (blue / green armed / grey locked), round restart + pause, coin bar, cream panel + ribbon (win green, lose red, pause blue, info purple), gold/grey stars, HARD / SUPER HARD banners. Unused pieces cut for later: toggle, sound/music icons, close X, home/play buttons, passenger bar, seat icon, check bar, winged banner.
+- VFX: DONE (2026-11-09). `Art/Sprites/VFX` (poof, confetti, sparkle, dust × 4 frames). `VfxPlayer` (pooled billboards, `GameConfig > vfx`): dust when a plane parks, sparkle when it fills, poof when it departs; confetti over the win popup.
 - Extra-slot icon could replace the "+" text on purchasable stands.
 - Desert props W4-W9 (control tower, hangar, windsock, cacti, rocks, rescue camp); cacti replace the green placeholder blobs.
 - Garden prop models; real sound clips for every `Cue`.

@@ -82,20 +82,71 @@ namespace SkyQueue
             }
         }
 
+        UiSkin Skin { get { return layout.skin; } }
+        string coinsFormat;
+        Image resultRibbon, resultStars, confettiImage, bannerArt;
+        Coroutine confettiRoutine;
+
+        /// <summary>Kit art on a button (pill sprite), or its flat colour when the slot is empty.</summary>
+        static Button Pill(Button b, Sprite sprite, Color fallback) { UiFactory.Skin((Image)b.targetGraphic, sprite, fallback); return b; }
+
+        /// <summary>Corner button: round kit icon (no label) when available, else the letter on a flat square.</summary>
+        Button CornerButton(string letter, Sprite icon, Vector2 pos, Transform parent, Action onClick)
+        {
+            var b = UiFactory.Button(icon != null ? "" : letter, parent, pos, layout.cornerButtonSize, layout.accent, layout.cornerFontSize, onClick);
+            return Pill(b, icon, layout.accent);
+        }
+
+        /// <summary>Dark text on the cream panel: the light outline used over the scene is turned off.</summary>
+        static Text OnPanel(Text t, Color color)
+        {
+            t.color = color;
+            var o = t.GetComponent<Outline>();
+            if (o != null) o.enabled = false;
+            return t;
+        }
+
+        /// <summary>
+        /// Popup body: cream panel + ribbon carrying the title. Must be called before the frame's other content (draw order).
+        /// Returns the title text, already placed on the ribbon (or at <paramref name="flatTitlePos"/> without art).
+        /// </summary>
+        Text PopupTitle(RectTransform frame, PanelFrame pf, Sprite ribbon, Vector2 flatTitlePos, int flatFontSize, out Image ribbonImage)
+        {
+            ribbonImage = null;
+            if (!Skin.HasPanels) return UiFactory.Text("", frame, flatTitlePos, layout.resultTitleSize, flatFontSize, Color.white);
+            UiFactory.Panel(frame, pf.center, pf.size, Skin.panel);
+            var rc = new Vector2(pf.center.x, pf.Top + Skin.ribbonOffsetY);
+            ribbonImage = UiFactory.ArtImage("Ribbon", frame, rc, Skin.ribbonSize, ribbon);
+            var t = UiFactory.Text("", frame, rc + new Vector2(0f, layout.ribbonTextOffsetY), new Vector2(Skin.ribbonSize.x * 0.72f, Skin.ribbonSize.y * 0.42f), Skin.ribbonFontSize, Color.white);
+            t.horizontalOverflow = HorizontalWrapMode.Wrap; t.verticalOverflow = VerticalWrapMode.Truncate;
+            t.resizeTextForBestFit = true; t.resizeTextMaxSize = Skin.ribbonFontSize; t.resizeTextMinSize = Skin.ribbonFontSize / 3;
+            return t;
+        }
+
         void Build(Transform root)
         {
             var hud = NewFrame(root, "HudFrame");
             levelText = UiFactory.Text("", hud, layout.levelLabel, layout.levelLabelSize, layout.levelFontSize, Color.white);
-            coinsText = UiFactory.Text("", hud, layout.coinsLabel, layout.coinsLabelSize, layout.coinsFontSize, layout.coinsColor);
-            UiFactory.Button("R", hud, layout.restartButton, layout.cornerButtonSize, layout.accent, layout.cornerFontSize, () => Raise(RestartRequested));
-            UiFactory.Button("II", hud, layout.pauseButton, layout.cornerButtonSize, layout.accent, layout.cornerFontSize, () => Raise(PauseRequested));
+            if (Skin.coinBar != null)
+            {
+                UiFactory.ArtImage("CoinBar", hud, layout.coinsLabel, Skin.coinBarSize, Skin.coinBar);   // 9-sliced: the coin disc keeps its shape
+                coinsText = OnPanel(UiFactory.Text("", hud, layout.coinsLabel + new Vector2(Skin.coinTextOffsetX, 0f), layout.coinsLabelSize, layout.coinsFontSize, Color.white), Skin.coinBarTextColor);
+                coinsFormat = Skin.coinBarFormat;
+            }
+            else
+            {
+                coinsText = UiFactory.Text("", hud, layout.coinsLabel, layout.coinsLabelSize, layout.coinsFontSize, layout.coinsColor);
+                coinsFormat = layout.coinsFormat;
+            }
+            CornerButton("R", Skin.roundRestart, layout.restartButton, hud, () => Raise(RestartRequested));
+            CornerButton("II", Skin.roundPause, layout.pauseButton, hud, () => Raise(PauseRequested));
 
             // Booster bar: composition matches the reference; the actions arrive in a later phase, so the buttons are visibly inactive.
             for (int i = 0; i < layout.boosterLabels.Length; i++)
             {
                 var pos = new Vector2(layout.boosterXs[i], layout.boosterY);
                 int index = i;
-                var b = UiFactory.Button(layout.boosterLabels[i], hud, pos, layout.boosterSize, layout.boosterColor, layout.boosterFontSize, () => RaiseBooster(index));
+                var b = Pill(UiFactory.Button(layout.boosterLabels[i], hud, pos, layout.boosterSize, layout.boosterColor, layout.boosterFontSize, () => RaiseBooster(index)), Skin.buttonBlue, layout.boosterColor);
                 boosterButtons.Add(b);
                 boosterLocked.Add(false);
                 boosterRects.Add((RectTransform)b.transform);
@@ -103,26 +154,46 @@ namespace SkyQueue
             }
 
             toastText = UiFactory.Text("", hud, layout.toast, layout.toastSize, layout.toastFontSize, Color.white);
-            bannerText = UiFactory.Text("", hud, layout.banner, layout.bannerSize, layout.bannerFontSize, layout.bannerColor);
+            if (Skin.bannerHard != null || Skin.bannerSuperHard != null)
+            {
+                bannerArt = UiFactory.ArtImage("BannerArt", hud, layout.banner, Skin.bannerArtSize, Skin.bannerHard);
+                bannerArt.enabled = false;
+            }
+            bannerText = UiFactory.Text("", hud, layout.banner, layout.bannerSize, layout.bannerFontSize, bannerArt != null ? Color.white : layout.bannerColor);
+
+            bool art = Skin.HasPanels;
+            Color body = art ? Skin.panelTextColor : Color.white, accent = art ? Skin.panelAccentColor : layout.coinsColor;
 
             resultPanel = UiFactory.Overlay("ResultPanel", root, layout.dim);
             var rf = NewFrame(resultPanel.transform, "ResultFrame");
-            resultTitle = UiFactory.Text("", rf, layout.resultTitle, layout.resultTitleSize, layout.resultTitleFontSize, Color.white);
+            resultTitle = PopupTitle(rf, Skin.resultPanel, Skin.ribbonWin, layout.resultTitle, layout.resultTitleFontSize, out resultRibbon);
+            if (art && Skin.starsWin != null)
+                resultStars = UiFactory.ArtImage("Stars", rf, new Vector2(Skin.resultPanel.center.x, Skin.resultPanel.Top + Skin.starsOffsetY), Skin.starsSize, Skin.starsWin);
+            if (resultStars != null) resultStars.transform.SetSiblingIndex(resultRibbon.transform.GetSiblingIndex());   // behind the ribbon
             resultReward = UiFactory.Text("", rf, layout.resultReward, layout.resultRewardSize, layout.resultRewardFontSize, layout.coinsColor);
-            var next = UiFactory.Button("Next", rf, layout.primaryButton, layout.panelButtonSize, layout.positive, layout.panelFontSize, () => Raise(ResultConfirmed));
+            if (art) OnPanel(resultReward, accent);
+            var next = Pill(UiFactory.Button("Next", rf, layout.primaryButton, layout.panelButtonSize, layout.positive, layout.panelFontSize, () => Raise(ResultConfirmed)), Skin.buttonGreen, layout.positive);
             resultButtonText = next.GetComponentInChildren<Text>();
+            if (Skin.confetti != null && Skin.confetti.Length > 0)
+            {
+                confettiImage = UiFactory.ArtImage("Confetti", rf, new Vector2(Skin.resultPanel.center.x, Skin.resultPanel.Top + Skin.confettiOffsetY), Skin.confettiSize, Skin.confetti[0]);
+                confettiImage.enabled = false;
+                var front = resultStars != null ? resultStars.transform : resultRibbon != null ? resultRibbon.transform : null;
+                if (front != null) confettiImage.transform.SetSiblingIndex(front.GetSiblingIndex());   // bursts behind stars + ribbon: never over the title
+            }
             resultPanel.SetActive(false);
 
             pausePanel = UiFactory.Overlay("PausePanel", root, layout.dim);
             var pf = NewFrame(pausePanel.transform, "PauseFrame");
-            UiFactory.Text("Paused", pf, layout.pauseTitle, layout.resultTitleSize, layout.resultTitleFontSize, Color.white);
-            UiFactory.Button("Resume", pf, layout.primaryButton, layout.panelButtonSize, layout.positive, layout.panelFontSize, () => Raise(ResumeRequested));
-            UiFactory.Button("Restart", pf, layout.secondaryButton, layout.panelButtonSize, layout.accent, layout.panelFontSize, () => Raise(RestartRequested));
+            Image unused;
+            PopupTitle(pf, Skin.pausePanel, Skin.ribbonPause, layout.pauseTitle, layout.resultTitleFontSize, out unused).text = "Paused";
+            Pill(UiFactory.Button("Resume", pf, layout.primaryButton, layout.panelButtonSize, layout.positive, layout.panelFontSize, () => Raise(ResumeRequested)), Skin.buttonGreen, layout.positive);
+            Pill(UiFactory.Button("Restart", pf, layout.secondaryButton, layout.panelButtonSize, layout.accent, layout.panelFontSize, () => Raise(RestartRequested)), Skin.buttonBlue, layout.accent);
             Vector2[] settingPos = { layout.settingSound, layout.settingHaptics, layout.settingMotion };
             for (int i = 0; i < settingPos.Length; i++)
             {
                 int which = i;
-                var sb = UiFactory.Button("Setting" + i, pf, settingPos[i], layout.settingButtonSize, layout.settingColor, layout.settingFontSize, () => { if (SettingToggled != null) SettingToggled(which); });
+                var sb = Pill(UiFactory.Button("Setting" + i, pf, settingPos[i], layout.settingButtonSize, layout.settingColor, layout.settingFontSize, () => { if (SettingToggled != null) SettingToggled(which); }), Skin.buttonBlue, layout.settingColor);
                 settingLabels[i] = sb.GetComponentInChildren<Text>();
                 settingLabels[i].fontSize = layout.settingFontSize;
             }
@@ -130,19 +201,21 @@ namespace SkyQueue
 
             buyPanel = UiFactory.Overlay("BuyPanel", root, layout.dim);
             var bf = NewFrame(buyPanel.transform, "BuyFrame");
-            buyTitle = UiFactory.Text("", bf, layout.buyTitle, layout.resultTitleSize, layout.resultTitleFontSize, Color.white);
-            buyDescription = UiFactory.Text("", bf, layout.buyDescription, layout.buyDescriptionSize, layout.buyDescriptionFontSize, Color.white);
-            buyCost = UiFactory.Text("", bf, layout.buyCost, layout.buyDescriptionSize, layout.buyDescriptionFontSize, layout.coinsColor);
-            buyButton = UiFactory.Button("Buy", bf, layout.buyButton, layout.panelButtonSize, layout.positive, layout.panelFontSize, () => Raise(BuyConfirmed));
-            UiFactory.Button("Cancel", bf, layout.cancelButton, layout.panelButtonSize, layout.accent, layout.panelFontSize, () => Raise(BuyCancelled));
+            buyTitle = PopupTitle(bf, Skin.buyPanel, Skin.ribbonInfo, layout.buyTitle, layout.resultTitleFontSize, out unused);
+            buyDescription = OnPanel(UiFactory.Text("", bf, layout.buyDescription, layout.buyDescriptionSize, layout.buyDescriptionFontSize, Color.white), body);
+            buyCost = OnPanel(UiFactory.Text("", bf, layout.buyCost, layout.buyDescriptionSize, layout.buyDescriptionFontSize, layout.coinsColor), accent);
+            if (!art) { buyDescription.GetComponent<Outline>().enabled = true; buyCost.GetComponent<Outline>().enabled = true; }
+            buyButton = Pill(UiFactory.Button("Buy", bf, layout.buyButton, layout.panelButtonSize, layout.positive, layout.panelFontSize, () => Raise(BuyConfirmed)), Skin.buttonGreen, layout.positive);
+            Pill(UiFactory.Button("Cancel", bf, layout.cancelButton, layout.panelButtonSize, layout.accent, layout.panelFontSize, () => Raise(BuyCancelled)), Skin.buttonBlue, layout.accent);
             buyPanel.SetActive(false);
 
             introPanel = UiFactory.Overlay("IntroPanel", root, layout.dim);
             var inf = NewFrame(introPanel.transform, "IntroFrame");
-            introTitle = UiFactory.Text("", inf, layout.buyTitle, layout.resultTitleSize, layout.resultTitleFontSize * 3 / 4, Color.white);
-            introBody = UiFactory.Text("", inf, layout.buyDescription, layout.buyDescriptionSize, layout.buyDescriptionFontSize, Color.white);
-            introGift = UiFactory.Text("", inf, layout.buyCost, layout.buyDescriptionSize, layout.buyDescriptionFontSize, layout.coinsColor);
-            UiFactory.Button("OK", inf, layout.introOkButton, layout.panelButtonSize, layout.positive, layout.panelFontSize, () => { introPanel.SetActive(false); Raise(IntroClosed); });
+            introTitle = PopupTitle(inf, Skin.introPanel, Skin.ribbonInfo, layout.buyTitle, layout.resultTitleFontSize * 3 / 4, out unused);
+            introBody = OnPanel(UiFactory.Text("", inf, layout.buyDescription, layout.buyDescriptionSize, layout.buyDescriptionFontSize, Color.white), body);
+            introGift = OnPanel(UiFactory.Text("", inf, layout.buyCost, layout.buyDescriptionSize, layout.buyDescriptionFontSize, layout.coinsColor), accent);
+            if (!art) { introBody.GetComponent<Outline>().enabled = true; introGift.GetComponent<Outline>().enabled = true; }
+            Pill(UiFactory.Button("OK", inf, layout.introOkButton, layout.panelButtonSize, layout.positive, layout.panelFontSize, () => { introPanel.SetActive(false); Raise(IntroClosed); }), Skin.buttonGreen, layout.positive);
             introPanel.SetActive(false);
         }
 
@@ -219,8 +292,10 @@ namespace SkyQueue
 
         void PaintBooster(int i)
         {
-            boosterButtons[i].targetGraphic.color = boosterLocked[i] ? layout.boosterLockedColor
-                                                  : i == boosterArmed ? layout.boosterArmedColor : layout.boosterColor;
+            bool locked = boosterLocked[i], armed = i == boosterArmed;
+            UiFactory.Skin((Image)boosterButtons[i].targetGraphic,
+                           locked ? Skin.buttonGrey : armed ? Skin.buttonGreen : Skin.buttonBlue,
+                           locked ? layout.boosterLockedColor : armed ? layout.boosterArmedColor : layout.boosterColor);
             if (HasIcon(i)) boosterIcons[i].color = boosterLocked[i] ? layout.boosterIconLockedTint : Color.white;
         }
 
@@ -274,7 +349,7 @@ namespace SkyQueue
         /// <summary>Rolls the counter to the new balance (instant the first time).</summary>
         public void SetCoins(int coins)
         {
-            if (shownCoins < 0 || !isActiveAndEnabled) { shownCoins = coins; coinsText.text = string.Format(layout.coinsFormat, coins); return; }
+            if (shownCoins < 0 || !isActiveAndEnabled) { shownCoins = coins; coinsText.text = string.Format(coinsFormat, coins); return; }
             if (coinRoutine != null) StopCoroutine(coinRoutine);
             coinRoutine = StartCoroutine(RollCoins(shownCoins, coins));
         }
@@ -284,11 +359,11 @@ namespace SkyQueue
             for (float t = 0f; t < layout.coinCountSeconds; t += Time.unscaledDeltaTime)
             {
                 int v = Mathf.RoundToInt(Mathf.Lerp(from, to, Mathf.SmoothStep(0f, 1f, t / layout.coinCountSeconds)));
-                if (v != shownCoins) { shownCoins = v; coinsText.text = string.Format(layout.coinsFormat, v); }
+                if (v != shownCoins) { shownCoins = v; coinsText.text = string.Format(coinsFormat, v); }
                 yield return null;
             }
             shownCoins = to;
-            coinsText.text = string.Format(layout.coinsFormat, to);
+            coinsText.text = string.Format(coinsFormat, to);
         }
 
         /// <summary>Shows a popup panel with a short fade-in (unscaled time, works while the game is paused).</summary>
@@ -318,30 +393,72 @@ namespace SkyQueue
                 resultReward.text = line;
             }
             resultButtonText.text = won ? "Next" : "Retry";
+            if (resultRibbon != null) UiFactory.Skin(resultRibbon, won ? Skin.ribbonWin : Skin.ribbonLose, Color.white);
+            if (resultStars != null)
+            {
+                var stars = won ? Skin.starsWin : Skin.starsLose;
+                resultStars.enabled = stars != null;
+                if (stars != null) resultStars.sprite = stars;
+            }
             ShowPanel(resultPanel);
+            if (confettiImage != null)
+            {
+                if (confettiRoutine != null) StopCoroutine(confettiRoutine);
+                confettiImage.enabled = false;
+                if (won) confettiRoutine = StartCoroutine(PlayConfetti());
+            }
         }
 
-        public void Toast(string message) { Restart(ref toastRoutine, toastText, message, layout.toastSeconds); }
-        public void Banner(string message) { Restart(ref bannerRoutine, bannerText, message, layout.bannerSeconds); }
+        /// <summary>Win burst over the ribbon: plays the confetti frames once (unscaled time).</summary>
+        IEnumerator PlayConfetti()
+        {
+            var frames = Skin.confetti;
+            confettiImage.enabled = true;
+            float total = Mathf.Max(0.05f, Skin.confettiSeconds);
+            Color c = Color.white;
+            for (float t = 0f; t < total; t += Time.unscaledDeltaTime)
+            {
+                float k = t / total;
+                confettiImage.sprite = frames[Mathf.Min(frames.Length - 1, (int)(k * frames.Length))];
+                c.a = 1f - Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(0.75f, 1f, k));   // fade the last quarter
+                confettiImage.color = c;
+                yield return null;
+            }
+            confettiImage.enabled = false;
+            confettiRoutine = null;
+        }
 
-        void Restart(ref Coroutine slot, Text target, string message, float duration)
+        public void Toast(string message) { Restart(ref toastRoutine, toastText, null, message, layout.toastSeconds); }
+        public void Banner(string message) { Banner(message, false); }
+
+        /// <summary>Difficulty banner; with the UI kit it sits on the yellow (hard) or red (super hard) ribbon art.</summary>
+        public void Banner(string message, bool superHard)
+        {
+            Sprite art = superHard && Skin.bannerSuperHard != null ? Skin.bannerSuperHard : Skin.bannerHard;
+            if (bannerArt != null) { bannerArt.sprite = art; bannerArt.enabled = art != null; }
+            Restart(ref bannerRoutine, bannerText, bannerArt != null && art != null ? bannerArt : null, message, layout.bannerSeconds);
+        }
+
+        void Restart(ref Coroutine slot, Text target, Graphic art, string message, float duration)
         {
             if (slot != null) StopCoroutine(slot);
-            slot = StartCoroutine(Fade(target, message, duration, layout.fadeSeconds));
+            slot = StartCoroutine(Fade(target, art, message, duration, layout.fadeSeconds));
         }
 
-        static IEnumerator Fade(Text t, string message, float duration, float fade)
+        static IEnumerator Fade(Text t, Graphic art, string message, float duration, float fade)
         {
             t.text = message;
-            Color c = t.color;
+            Color c = t.color, a = art != null ? art.color : Color.white;
             for (float e = 0f; e < duration; e += Time.unscaledDeltaTime)
             {
-                c.a = Mathf.Clamp01((duration - e) / fade);
+                c.a = a.a = Mathf.Clamp01((duration - e) / fade);
                 t.color = c;
+                if (art != null) art.color = a;
                 yield return null;
             }
             t.text = "";
             c.a = 1f; t.color = c;
+            if (art != null) { a.a = 1f; art.color = a; art.enabled = false; }
         }
     }
 }

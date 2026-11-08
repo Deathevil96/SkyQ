@@ -110,6 +110,11 @@ namespace SkyQueue
         public Vector2 panelButtonSize = new Vector2(380f, 130f);
         public int panelFontSize = 58;
 
+        [Header("Art (UI kit); empty slots fall back to the flat look")]
+        public UiSkin skin = new UiSkin();
+        [Tooltip("Popup title offset from the ribbon centre (reference px, - = up: the ribbon's front face sits high).")]
+        public float ribbonTextOffsetY = -16f;
+
         [Header("Colours")]
         public Color accent = new Color(0.25f, 0.55f, 0.95f);
         public Color positive = new Color(0.25f, 0.75f, 0.3f);

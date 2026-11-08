@@ -79,6 +79,41 @@ namespace SkyQueue
             return b;
         }
 
+        /// <summary>
+        /// Puts kit art on an image (white tint). A 9-sliced sprite's borders are scaled to the rect's height, so pill caps
+        /// stay round at any button size. Null sprite: keeps the procedural look in <paramref name="fallback"/> colour.
+        /// </summary>
+        public static void Skin(Image img, Sprite sprite, Color fallback)
+        {
+            if (sprite == null) { img.sprite = Rounded; img.type = UnityEngine.UI.Image.Type.Sliced; img.color = fallback; img.pixelsPerUnitMultiplier = 1f; return; }
+            img.sprite = sprite;
+            img.color = Color.white;
+            bool sliced = sprite.border.sqrMagnitude > 0f;
+            img.type = sliced ? UnityEngine.UI.Image.Type.Sliced : UnityEngine.UI.Image.Type.Simple;
+            img.preserveAspect = !sliced;
+            float h = img.rectTransform.rect.height;
+            if (sliced && h > 1f) img.pixelsPerUnitMultiplier = sprite.rect.height / h;   // borders scale with the rect height
+        }
+
+        /// <summary>A non-interactive art image (panel, ribbon, stars, banner).</summary>
+        public static Image ArtImage(string name, Transform parent, Vector2 centerPx, Vector2 sizePx, Sprite sprite)
+        {
+            var rt = Rect(name, parent, centerPx, sizePx);
+            var img = rt.gameObject.AddComponent<Image>();
+            img.raycastTarget = false;
+            Skin(img, sprite, Color.white);
+            return img;
+        }
+
+        /// <summary>Panel bodies: the border keeps its art size (not the rect height).</summary>
+        public static Image Panel(Transform parent, Vector2 centerPx, Vector2 sizePx, Sprite sprite)
+        {
+            var img = ArtImage("Panel", parent, centerPx, sizePx, sprite);
+            img.pixelsPerUnitMultiplier = 1f;
+            img.raycastTarget = true;   // swallows taps on the popup body
+            return img;
+        }
+
         public static GameObject Overlay(string name, Transform parent, Color color)
         {
             var go = new GameObject(name, typeof(RectTransform), typeof(Image));
