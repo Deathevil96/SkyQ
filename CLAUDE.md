@@ -38,7 +38,7 @@ stranded passengers at a remote desert airstrip are flown out by the planes. Spe
 
 ## Status (2026-11-08) and next steps
 - Done: GDD phases 1–4 (gameplay, 1000 levels, economy, save, boosters, sound placeholders, haptics, settings, dev logs, analytics), world rotation, debug menu; art wired in: planes, passengers (4 archetypes × 8 colours), helicopter (rotor split in code), stand pads, emoji, booster icons, garden/asphalt + desert sand/dirt/concrete textures, desert signal smoke.
-- **Just added, not yet visually verified:** exhaust puffs behind planes taxiing to the stands (`ExhaustPuffs`, `GameConfig > exhaust`, frames `Art/Sprites/Exhaust`). Check in Play mode first thing.
+- Exhaust puffs behind planes taxiing to the stands (`ExhaustPuffs`, `GameConfig > exhaust`, frames `Art/Sprites/Exhaust`): verified in Play mode 2026-11-09 (trail visible, fades out via `startAlpha`/`fadeStart`, pool empties after parking).
 - Open: desert props W4–W9 (tower, hangar, windsock, cacti to replace green blobs, rocks, rescue camp); UI kit + VFX sheets slicing; sound clips; phone pass on the S23; difficulty tuning by playtest.
 - Owner is generating more assets; when they say "added assets", list new files under `Assets/SkyQueue/Art`, inspect, wire in, verify with a Play-mode screenshot.
 

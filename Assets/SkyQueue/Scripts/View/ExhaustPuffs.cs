@@ -17,6 +17,9 @@ namespace SkyQueue
         public float startSize = 0.35f, endSize = 0.9f;
         [Tooltip("Height above the ground and backwards drift (world units per second).")]
         public float height = 0.25f, drift = 0.4f;
+        [Tooltip("Opacity at birth, and the point of the lifetime (0-1) where fading out begins.")]
+        [Range(0f, 1f)] public float startAlpha = 0.85f;
+        [Range(0f, 1f)] public float fadeStart = 0.35f;
         [Tooltip("Also puff while a full plane departs.")]
         public bool onDeparture = false;
         public int poolSize = 48;   // never allocates more; oldest puff is reused when full
@@ -105,6 +108,8 @@ namespace SkyQueue
                 t.rotation = face;
                 t.localScale = Vector3.one * (Mathf.Lerp(s.startSize, s.endSize, k) / Mathf.Max(0.001f, spriteHeight));
                 p.Sr.sprite = s.frames[Mathf.Min(s.frames.Length - 1, (int)(k * s.frames.Length))];
+                float fade = 1f - Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(s.fadeStart, 1f, k));
+                p.Sr.color = new Color(1f, 1f, 1f, s.startAlpha * fade);
                 pool[i] = p;
             }
         }
