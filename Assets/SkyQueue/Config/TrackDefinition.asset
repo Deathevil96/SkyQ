@@ -1,0 +1,42 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3d4037f877aab4b4bb1289b970ff4a00, type: 3}
+  m_Name: TrackDefinition
+  m_EditorClassIdentifier: Assembly-CSharp::SkyQueue.TrackDefinition
+  ringCornersPx:
+  - {x: 460, y: 300}
+  - {x: 745, y: 560}
+  - {x: 175, y: 560}
+  ringCornerRadiusPx:
+  - 130
+  - 115
+  - 115
+  ringArcSamples: 24
+  feedLeft:
+  - {x: 250, y: -250}
+  - {x: 235, y: 0}
+  - {x: 215, y: 120}
+  - {x: 176, y: 215}
+  - {x: 146, y: 300}
+  - {x: 165, y: 375}
+  - {x: 215, y: 415}
+  - {x: 262, y: 430}
+  splineSamplesPerSegment: 14
+  ringHalfWidthPx: 70
+  feedHalfWidthPx: 70
+  rowFillFraction: 0.82
+  rimWidth: 0.07
+  junctionFillDistance: 0.9
+  exitStubEndPx: {x: 460, y: 650}
+  exitStubHalfWidthPx: 85
+  exitGap: {x: 460, y: 560}
+  feedScreenTop: {x: 235, y: 0}
