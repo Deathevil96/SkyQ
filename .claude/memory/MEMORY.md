@@ -1,0 +1,6 @@
+- [SkyQueue project](project_skyqueue.md) — design decisions, code layout, data-driven levels
+- [Working style](feedback_working_style.md) — no hardcoding, perf-first, autonomy, difficulty must demand planning
+- [Art prompt details](feedback_art_prompts.md) — spell out flat magenta backgrounds / separate parts in prompts
+- [Check Play mode first](feedback_check_playmode.md) — never edit/compile/test while the editor is in Play mode
+- [Taxi strip pending](project_taxi_strip_pending.md) — taxi strip model pushed 2026-11-09, not wired; owner implements on Mac
+- [Dev environment](reference_dev_environment.md) — test phone, adb path, MCP/Unity quirks

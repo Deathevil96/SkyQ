@@ -45,6 +45,7 @@ stranded passengers at a remote desert airstrip are flown out by the planes. Spe
 - Owner is generating more assets; when they say "added assets", list new files under `Assets/SkyQueue/Art`, inspect, wire in, verify with a Play-mode screenshot.
 
 ## Mac setup reminders
+- Claude memory from the Windows machine is in `.claude/memory/` (index: `MEMORY.md`). Read it at the start of a session, and copy it into this machine's Claude memory folder (`~/.claude/projects/<project-path>/memory/`).
 - Open the project with Unity Hub (6000.3.17f1), let it import (Library is not in git), then reconnect the Unity MCP (`/mcp`).
 - Editor save on macOS: `~/Library/Application Support/DefaultCompany/SkyQueue_ Desert Rescue/skyqueue_save.json` (the Windows save is not in git; use the debug menu to add coins / jump levels).
 - Android build on Mac needs the Android module installed in Unity Hub.
