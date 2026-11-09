@@ -44,6 +44,11 @@ stranded passengers at a remote desert airstrip are flown out by the planes. Spe
 - Open: desert props W4–W9 (tower, hangar, windsock, cacti to replace green blobs, rocks, rescue camp); sound clips; phone pass on the S23; difficulty tuning by playtest.
 - Owner is generating more assets; when they say "added assets", list new files under `Assets/SkyQueue/Art`, inspect, wire in, verify with a Play-mode screenshot.
 
+## Release readiness (from the global playbook; not started unless marked)
+- Audit first: versioned save + migration, compile defines (test vs production), IL2CPP/ARM64/stripping/AAB, target SDK, `Application.targetFrameRate`, incremental GC, log stripping in release.
+- Not started: ads behind `IAdProvider`-style interface + UMP consent, analytics gated by consent, IAP, Crashlytics, privacy policy/terms/app-ads.txt, Data Safety, content rating, keystore (back up in two places, git-ignored), store listing assets.
+- Rules: only release AAB builds bump the version code; never submit Play Console forms or releases without the owner's OK; profile on the S23 before optimizing.
+
 ## Mac setup reminders
 - Claude memory from the Windows machine is in `.claude/memory/` (index: `MEMORY.md`). Read it at the start of a session, and copy it into this machine's Claude memory folder (`~/.claude/projects/<project-path>/memory/`).
 - Open the project with Unity Hub (6000.3.17f1), let it import (Library is not in git), then reconnect the Unity MCP (`/mcp`).
